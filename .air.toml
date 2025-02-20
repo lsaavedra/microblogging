@@ -1,0 +1,12 @@
+[build]
+cmd = "go build -buildvcs=false -o ./tmp/microblogging ./cmd/api"
+bin = "./tmp/microblogging"
+full_bin = "APP_ENV=local ./tmp/microblogging"
+include_ext = ["go", "mod", "json"]
+exclude_dir = [".vscode", "tests", "tmp", "bin"]
+
+[log]
+level = "debug"
+
+[color]
+main = "cyan"
