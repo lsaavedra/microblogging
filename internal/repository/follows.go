@@ -2,14 +2,19 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/pkg/errors"
 
 	"microblogging/db"
 	"microblogging/internal/model"
 )
+
+const errorUniqueViolationPgCode = "23505"
+
+var ErrFollowRelationAlreadyExists = errors.New("follow relation already exists")
 
 type (
 	FollowsRepository struct {
@@ -23,20 +28,24 @@ func NewFollowsRepository(db *db.Database) *FollowsRepository {
 	}
 }
 
-func (repo *FollowsRepository) SaveFollowAndFollowing(ctx context.Context, follow model.Follow) error {
-	//TODO resolve how to connect to db to add new relation
-	fmt.Printf("User_id: %v following a new user_id: %v", follow.FollowerID, follow.FollowingID)
-
+func (repo *FollowsRepository) CreateFollowing(ctx context.Context, follow model.Follow) error {
 	follow.FollowedAt = time.Now()
+
 	err := repo.db.WithContext(ctx).Create(&follow).Error
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == errorUniqueViolationPgCode {
+			return ErrFollowRelationAlreadyExists
+		}
+	}
 
 	return err
 }
 
-func (repo *FollowsRepository) GetFollowing(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
-	var following []uuid.UUID
+func (repo *FollowsRepository) GetFollowers(ctx context.Context, userID uuid.UUID) ([]model.Follow, error) {
+	var following []model.Follow
 
-	err := repo.db.WithContext(ctx).Where("follower_id = ?", userID).Find(&following).Error
+	err := repo.db.WithContext(ctx).Where("followed_id = ?", userID).Find(&following).Error
 
 	return following, err
 }

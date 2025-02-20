@@ -16,10 +16,10 @@ import (
 )
 
 var (
-	userID = uuid.MustParse("b9a9f007-0b17-46ed-a165-a49d28238bbb")
-	tweet  = model.Tweet{
+	createdBy = uuid.MustParse("b9a9f007-0b17-46ed-a165-a49d28238bbb")
+	tweet     = model.Tweet{
 		ID:              uuid.MustParse("3992c8ab-6c64-4eed-b780-345d12ecc9c8"),
-		CreatedBy:       userID,
+		CreatedBy:       createdBy,
 		Message:         "It´s my first post!",
 		MediaContentUrl: "",
 		CreatedAt:       time.Now(),

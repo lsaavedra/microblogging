@@ -1,53 +1,77 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 
+	"microblogging/internal/model"
 	"microblogging/internal/utils"
 )
 
-type TweetsService interface {
-	//TODO: define methods
-}
+type (
+	TweetsService interface {
+		CreateUserTweet(ctx context.Context, tweetRequest model.CreateTweetRequest) (model.CreateTweetResponse, error)
+	}
+
+	TimelineSrv interface {
+		GetFullUserTimeline(ctx context.Context, userID string) (utils.PaginatedResponse[model.Tweet], error)
+	}
+)
 
 type TweetsHandler struct {
-	service TweetsService
+	service         TweetsService
+	timelineService TimelineSrv
 }
 
-func NewTweetsHandler(service UserService) *TweetsHandler {
+func NewTweetsHandler(service TweetsService, timelineService TimelineSrv) *TweetsHandler {
 	return &TweetsHandler{
-		service: service}
+		service:         service,
+		timelineService: timelineService,
+	}
 }
 
 func (h *TweetsHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	rg.POST("/tweet", utils.RouteWithStatus(h.CreateTweet))
-	rg.PATCH("/tweet/:id", utils.RouteWithStatus(h.UpdateTweetByID))
-	rg.GET("/tweets", utils.RouteWithStatus(h.GetTweetsTimeline))
+	rg.POST("/tweets", utils.RouteWithStatus(h.CreateTweet))
+	rg.GET("/tweets/timelines", utils.RouteWithStatus(h.GetTweetsTimeline))
 }
 
 func (h *TweetsHandler) CreateTweet(c *gin.Context) (int, error) {
-	//TODO: handle request filters and called service
-	//Check that tweet is less than 280 characters
+	var payload model.CreateTweetRequest
+	err := c.BindJSON(&payload)
 
-	c.JSON(http.StatusOK, map[string]string{})
+	if err != nil {
+		return http.StatusBadRequest, nil
+	}
 
-	return http.StatusOK, nil
-}
+	if err := payload.Check(); err != nil {
+		return http.StatusBadRequest, err
+	}
 
-func (h *TweetsHandler) UpdateTweetByID(c *gin.Context) (int, error) {
-	//TODO: handle request filters and called service
+	tweet, err := h.service.CreateUserTweet(c, payload)
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrap(err, "failed to create user tweet")
+	}
 
-	c.JSON(http.StatusOK, map[string]string{})
+	c.JSON(http.StatusOK, tweet)
 
 	return http.StatusOK, nil
 }
 
 func (h *TweetsHandler) GetTweetsTimeline(c *gin.Context) (int, error) {
-	//TODO: handle request filters and called service
+	userID := c.Query("user_id")
+	if userID == "" {
+		return http.StatusBadRequest, errors.New("empty user_id")
+	}
 
-	c.JSON(http.StatusOK, map[string]string{})
+	result, err := h.timelineService.GetFullUserTimeline(c, userID)
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrap(err, "failed to get user timeline")
+	}
+
+	c.JSON(http.StatusOK, result)
 
 	return http.StatusOK, nil
 }

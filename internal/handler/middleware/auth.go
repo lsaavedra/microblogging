@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 type AbortError struct {
@@ -13,7 +14,11 @@ type AbortError struct {
 
 func NewCustomerUserMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		err := verifyUserAuth(ctx)
+		err := verifyUserFromRequest(ctx)
+		if err == nil {
+			ctx.Next()
+			return
+		}
 
 		if err != nil {
 			abortWithError(ctx, http.StatusUnauthorized, err)
@@ -24,17 +29,14 @@ func NewCustomerUserMiddleware() gin.HandlerFunc {
 	}
 }
 
-func verifyUserAuth(ctx *gin.Context) error {
-	// TODO we should validate that x-user-id comes from headers or in body
-	/*
-		userId := ctx.Request.Header.Get("x-user-id")
-
-		if userId == "" {
-			return errors.New("user_id is required")
+func verifyUserFromRequest(ctx *gin.Context) error {
+	userIdFromParams := ctx.Query("user_id")
+	if userIdFromParams == "" {
+		userIdFromHeaders := ctx.Request.Header.Get("x-user-id")
+		if userIdFromHeaders == "" {
+			return errors.New("user_id is required by param or header")
 		}
-	*/
-
-	//TODO add logic to resolve that userid comes from header, or body o param
+	}
 
 	return nil
 }

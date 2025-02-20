@@ -1,0 +1,24 @@
+# Assumptions extras
+
+1. Se considera un usuario "popular" a aquel que supera una cierta cantidad de seguidores. Ejemplo: 10k
+
+2. Se utiliza una cache "en memoria" a los fines de este desarrollo como MVP, pero a los términos productivos se
+utilizaría una cache Redis para guardar los timelines de los usuarios y tweets de usuarios populares.
+
+3. Los tweets en cache se ordenan por fecha de creación. Lo ideal sería poder utilizar la cache en Redis con el
+mecanismo LRU de manera tal que  no sea necesario gestionarlo en código. Se puso un límite de 50 Tweets en cache de
+Timeline por usuario a los fines prácticos.
+
+4. Se utiliza un mecanismo de Pub/Sub local lo cual sería ideal utilizar alguno en Cloud (Ejemplo GCP Pub/Sub)
+
+5. En base al punto anterior, se utiliza en 2 situaciones:
+    a. Creación de un nuevo Tweet: se dispara un nuevo evento y quien esta suscripto valida la cantidad de
+    followers del usuario que creó el Tweet y en caso de que no sea un user "popular" se actualizan los Timelines en
+    cache de cada follower. Caso contrario, si es un user popular, solo se guarda su Tweet en Cache pero bajo un
+    formato "popular|userID" de manera que cuando se quiere traer los timelines de sus seguidores, se combine la
+    información de la cache + los tweets de este usuario en cache
+    b. Seguimiento de un nuevo usuario: cuando se sigue un nuevo usuario (usuarioA sigue a usuarioB) y no es un usuario
+    popular, se dispara  un evento y quien está suscripto busca los tweets más recientes este usuarioB (en db) y los
+    anexa a los que contenga el timeline en cache del usuarioA. Si es un usuario popular, simplemente se guarda este
+    tweet en cache para el usuario que lo genera bajo la forma "popular|user_id", de manera tal que este disponible luego
+    para cualquier usuario que lo requiera.

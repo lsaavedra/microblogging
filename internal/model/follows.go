@@ -7,7 +7,7 @@ import (
 )
 
 type Follow struct {
-	FollowerID  uuid.UUID `gorm:"primaryKey;type:uuid"`
-	FollowingID uuid.UUID `gorm:"primaryKey"`
-	FollowedAt  time.Time
+	FollowedID uuid.UUID `gorm:"primaryKey;type:uuid"`
+	FollowerID uuid.UUID `gorm:"primaryKey;type:uuid"`
+	FollowedAt time.Time
 }

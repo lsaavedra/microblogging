@@ -8,21 +8,39 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	log "github.com/sirupsen/logrus"
+
 	"microblogging/db"
 	"microblogging/internal/config"
+	"microblogging/internal/eventstub"
 	"microblogging/internal/handler"
 )
 
 func main() {
 	go beforeShutdown()
 
+	logger := InitLogs()
+
 	envConf := config.Load(os.Getenv("ENV"))
 
 	dbInstance := db.Init(envConf)
 
-	router := handler.RouterWithHandlers(dbInstance)
+	// Initialize Pub/Sub system
+	pubSub := eventstub.NewPubSub()
+
+	router := handler.RouterWithHandlers(dbInstance, logger, pubSub)
 
 	initServer(router, envConf)
+}
+
+func InitLogs() *log.Logger {
+	logger := log.New()
+
+	logger.SetFormatter(&log.JSONFormatter{})
+
+	logger.SetLevel(log.InfoLevel)
+
+	return logger
 }
 
 func initServer(router *gin.Engine, envConf *config.Config) {

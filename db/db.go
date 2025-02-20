@@ -7,8 +7,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"microblogging/internal/config"
 	"microblogging/internal/model"
+
+	"microblogging/internal/config"
 )
 
 type Database struct {

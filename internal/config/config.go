@@ -18,6 +18,7 @@ type (
 		Environment   string
 		ListeningPort string
 		PgConfig
+		CacheConfig
 	}
 
 	PgConfig struct {
@@ -26,6 +27,11 @@ type (
 		PgDatabase   string
 		PostgresPort string
 		PostgresHost string
+	}
+
+	CacheConfig struct {
+		Host string
+		Port string
 	}
 )
 
@@ -48,7 +54,7 @@ func Load(env string) *Config {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
 
-	viper.SetDefault("LISTENING_PORT", "5003")
+	viper.SetDefault("LISTENING_PORT", "5000")
 
 	return &Config{
 		Environment:   env,
@@ -59,6 +65,10 @@ func Load(env string) *Config {
 			PgDatabase:   viper.GetString("POSTGRES_DB"),
 			PostgresPort: viper.GetString("POSTGRES_PORT"),
 			PostgresHost: viper.GetString("POSTGRES_HOST"),
+		},
+		CacheConfig: CacheConfig{
+			Host: viper.GetString("REDIS_HOST"),
+			Port: viper.GetString("REDIS_PORT"),
 		},
 	}
 }

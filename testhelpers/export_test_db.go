@@ -1,4 +1,4 @@
-package testharness
+package testhelpers
 
 import (
 	"os/exec"
