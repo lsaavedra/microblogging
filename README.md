@@ -23,6 +23,10 @@ The service is built using Go and separated into distinct layers (handlers, serv
 └── testhelpers/             # Testing utilities and helpers
 ```
 
+## High Level Architecture
+![High Level Architecture](https://github.com/user-attachments/assets/d00d7988-950f-4519-b929-bbefdfce4fc3)
+
+
 ## Usage Instructions
 
 ### Prerequisites
@@ -118,8 +122,6 @@ Key component interactions:
 7. Error handling occurs at each layer with appropriate responses
 
 ## Infrastructure
-
-![Infrastructure diagram](./docs/infra.svg)
 
 ### Database
 
